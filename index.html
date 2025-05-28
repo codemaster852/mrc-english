@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Learning Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: #3b82f6; /* Tailwind blue-600 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .tab-button:not(.active):hover {
+            background-color: #dbeafe; /* Tailwind blue-100 */
+        }
+        .tab-content {
+            background-color: white;
+            border-radius: 0.5rem; /* 8px */
+            padding: 1.5rem; /* 24px */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .content-placeholder {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #cbd5e1; /* Tailwind coolGray-300 */
+            color: #64748b; /* Tailwind coolGray-500 */
+        }
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3b82f6; /* Blue */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Custom modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+        .btn-primary {
+            background-color: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 0.375rem;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #6b7280; color: white; padding: 0.5rem 1rem; border-radius: 0.375rem;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        audio {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-8">
+
+    <header class="mb-8 text-center">
+        <h1 class="text-4xl font-bold text-gray-800">English Learning Hub</h1>
+        <p class="text-lg text-gray-600">Your self-paced journey to English fluency</p>
+    </header>
+
+    <nav class="flex flex-wrap justify-center gap-2 mb-8">
+        <button data-tab="speaking" class="tab-button active py-2 px-4 rounded-md font-semibold text-gray-700 bg-white">Speaking</button>
+        <button data-tab="listening" class="tab-button py-2 px-4 rounded-md font-semibold text-gray-700 bg-white">Listening</button>
+        <button data-tab="reading" class="tab-button py-2 px-4 rounded-md font-semibold text-gray-700 bg-white">Reading</button>
+        <button data-tab="vocabulary" class="tab-button py-2 px-4 rounded-md font-semibold text-gray-700 bg-white">Vocabulary</button>
+        <button data-tab="grammar" class="tab-button py-2 px-4 rounded-md font-semibold text-gray-700 bg-white">Grammar</button>
+    </nav>
+
+    <main class="w-full max-w-3xl">
+        <section id="speaking-content" class="tab-content">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Speaking Practice</h2>
+            <button id="loadSpeakingPhrases" class="btn-primary mb-4">Get New Phrases</button>
+            <div id="speakingPhrasesContainer" class="space-y-3 mb-4 content-placeholder">
+                <p>Click "Get New Phrases" to start practicing.</p>
+            </div>
+            <div class="mt-4 p-4 border border-gray-200 rounded-lg">
+                <h3 class="text-lg font-medium mb-2">Record Yourself:</h3>
+                <button id="startRecordBtn" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md mr-2">Start Recording</button>
+                <button id="stopRecordBtn" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md mr-2" disabled>Stop Recording</button>
+                <audio id="audioPlayback" controls class="mt-2"></audio>
+                <p id="recordingStatus" class="text-sm text-gray-500 mt-1"></p>
+            </div>
+        </section>
+
+        <section id="listening-content" class="tab-content hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Listening Comprehension</h2>
+            <button id="loadListeningExercise" class="btn-primary mb-4">Load New Listening Exercise</button>
+            <div id="listeningExerciseContainer" class="space-y-4 content-placeholder">
+                <p>Click "Load New Listening Exercise" to begin.</p>
+            </div>
+        </section>
+
+        <section id="reading-content" class="tab-content hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Reading Comprehension</h2>
+            <button id="loadReadingPassage" class="btn-primary mb-4">Load New Reading Passage</button>
+            <div id="readingPassageContainer" class="space-y-4 content-placeholder">
+                <p>Click "Load New Reading Passage" to start reading.</p>
+            </div>
+        </section>
+
+        <section id="vocabulary-content" class="tab-content hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Vocabulary Builder</h2>
+            <button id="loadVocabularySet" class="btn-primary mb-4">Get New Vocabulary Set</button>
+            <div id="vocabularyContainer" class="space-y-4 content-placeholder">
+                <p>Click "Get New Vocabulary Set" to learn new words.</p>
+            </div>
+        </section>
+
+        <section id="grammar-content" class="tab-content hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Grammar Guide</h2>
+            <button id="loadGrammarTopic" class="btn-primary mb-4">Load New Grammar Topic & Exercise</button>
+            <div id="grammarContainer" class="space-y-4 content-placeholder">
+                <p>Click "Load New Grammar Topic & Exercise" to learn.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="mt-12 text-center text-sm text-gray-500">
+        <p>&copy; 2024 Self-Paced English Learning Hub. Happy Learning!</p>
+    </footer>
+
+    <div id="messageModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="modalTitle" class="text-xl font-semibold mb-3">Notification</h3>
+            <p id="modalMessage" class="mb-4">This is a message.</p>
+            <button id="modalCloseBtn" class="btn-primary float-right">Close</button>
+        </div>
+    </div>
+    
+    <div id="globalLoader" class="fixed top-0 left-0 w-full h-full bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="loader"></div>
+    </div>
+
+    <script>
+        // --- Basic UI and Tab Management ---
+        const tabs = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const globalLoader = document.getElementById('globalLoader');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(item => item.classList.remove('active'));
+                tab.classList.add('active');
+
+                const target = tab.getAttribute('data-tab');
+                tabContents.forEach(content => {
+                    if (content.id === `${target}-content`) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // --- Modal Functionality ---
+        const messageModal = document.getElementById('messageModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        function showModal(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            messageModal.classList.remove('hidden');
+        }
+        modalCloseBtn.addEventListener('click', () => messageModal.classList.add('hidden'));
+
+
+        // --- Gemini API Configuration ---
+        const API_KEY = ""; // Provided by Canvas environment
+        const API_URL_GEMINI = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
+        async function callGeminiAPI(prompt, isJson = false) {
+            globalLoader.classList.remove('hidden');
+            let payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }]
+            };
+
+            if (isJson) {
+                payload.generationConfig = {
+                    responseMimeType: "application/json",
+                };
+            }
+            
+            try {
+                const response = await fetch(API_URL_GEMINI, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    throw new Error(`API request failed with status ${response.status}: ${errorBody}`);
+                }
+                const result = await response.json();
+                globalLoader.classList.add('hidden');
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    return isJson ? JSON.parse(text) : text;
+                } else {
+                    console.error("Unexpected API response structure:", result);
+                    throw new Error("Failed to get valid content from API.");
+                }
+            } catch (error) {
+                globalLoader.classList.add('hidden');
+                console.error("Error calling Gemini API:", error);
+                showModal("API Error", `Could not fetch content: ${error.message}. Please try again later.`);
+                return null;
+            }
+        }
+        
+        // --- Text-to-Speech Utility ---
+        function speakText(text, lang = 'en-US') {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                // Optional: find a specific voice
+                const voices = speechSynthesis.getVoices();
+                const englishVoice = voices.find(voice => voice.lang.startsWith(lang.split('-')[0]) && voice.name.includes('Google') || voice.default);
+                if (englishVoice) {
+                    utterance.voice = englishVoice;
+                }
+                speechSynthesis.speak(utterance);
+            } else {
+                showModal("Browser Feature Missing", "Sorry, your browser does not support text-to-speech.");
+            }
+        }
+        // Ensure voices are loaded for better selection
+        if ('speechSynthesis' in window) {
+            speechSynthesis.onvoiceschanged = () => {
+                speechSynthesis.getVoices(); // Populate voice list
+            };
+        }
+
+
+        // --- Speaking Section ---
+        const loadSpeakingPhrasesBtn = document.getElementById('loadSpeakingPhrases');
+        const speakingPhrasesContainer = document.getElementById('speakingPhrasesContainer');
+        const startRecordBtn = document.getElementById('startRecordBtn');
+        const stopRecordBtn = document.getElementById('stopRecordBtn');
+        const audioPlayback = document.getElementById('audioPlayback');
+        const recordingStatus = document.getElementById('recordingStatus');
+        let mediaRecorder;
+        let audioChunks = [];
+
+        loadSpeakingPhrasesBtn.addEventListener('click', async () => {
+            const prompt = "Generate 5 short, common English phrases for speaking practice. Each phrase should be suitable for a beginner to intermediate learner. Provide them as a simple text list, one phrase per line.";
+            const phrasesText = await callGeminiAPI(prompt);
+            if (phrasesText) {
+                const phrases = phrasesText.split('\n').filter(p => p.trim() !== '');
+                speakingPhrasesContainer.innerHTML = phrases.map(phrase => `
+                    <div class="p-3 bg-blue-50 rounded-md shadow-sm flex justify-between items-center">
+                        <p class="text-blue-700">${phrase}</p>
+                        <button onclick="speakText('${phrase.replace(/'/g, "\\'")}')" class="ml-2 p-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                            </svg>
+                        </button>
+                    </div>
+                `).join('');
+                speakingPhrasesContainer.classList.remove('content-placeholder');
+            } else {
+                 speakingPhrasesContainer.innerHTML = '<p class="text-red-500">Could not load phrases. Please try again.</p>';
+                 speakingPhrasesContainer.classList.add('content-placeholder');
+            }
+        });
+
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            startRecordBtn.addEventListener('click', async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        audioPlayback.src = audioUrl;
+                        audioPlayback.classList.remove('hidden');
+                        recordingStatus.textContent = "Recording finished. Press play to listen.";
+                    };
+                    mediaRecorder.start();
+                    startRecordBtn.disabled = true;
+                    stopRecordBtn.disabled = false;
+                    audioPlayback.classList.add('hidden');
+                    audioPlayback.src = '';
+                    recordingStatus.textContent = "Recording...";
+                } catch (err) {
+                    console.error("Error accessing microphone:", err);
+                    showModal("Microphone Error", "Could not access microphone. Please check permissions. " + err.message);
+                    recordingStatus.textContent = "Error: Could not access microphone.";
+                }
+            });
+
+            stopRecordBtn.addEventListener('click', () => {
+                if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                    mediaRecorder.stop();
+                    startRecordBtn.disabled = false;
+                    stopRecordBtn.disabled = true;
+                }
+            });
+        } else {
+            startRecordBtn.disabled = true;
+            stopRecordBtn.disabled = true;
+            recordingStatus.textContent = "Audio recording is not supported by your browser.";
+            showModal("Browser Feature Missing", "Audio recording is not supported by your browser.");
+        }
+
+
+        // --- Listening Section ---
+        const loadListeningExerciseBtn = document.getElementById('loadListeningExercise');
+        const listeningExerciseContainer = document.getElementById('listeningExerciseContainer');
+
+        loadListeningExerciseBtn.addEventListener('click', async () => {
+            const prompt = `Generate a short English story or dialogue (about 50-100 words) suitable for an A2-B1 level English learner. Also, provide 3 multiple-choice comprehension questions about the story, with 3 options for each question, and indicate the correct answer (0-indexed).
+            Return the response as a JSON object with the following structure:
+            {
+              "story": "The text of the story...",
+              "questions": [
+                { "question": "Question 1?", "options": ["Option A", "Option B", "Option C"], "correctAnswerIndex": 0 },
+                { "question": "Question 2?", "options": ["Option A", "Option B", "Option C"], "correctAnswerIndex": 1 },
+                { "question": "Question 3?", "options": ["Option A", "Option B", "Option C"], "correctAnswerIndex": 2 }
+              ]
+            }`;
+            // Forcing JSON by providing schema in prompt, but also setting responseMimeType
+            const data = await callGeminiAPI(prompt, true); 
+            if (data && data.story && data.questions) {
+                listeningExerciseContainer.innerHTML = `
+                    <div class="mb-4">
+                        <h3 class="text-xl font-medium mb-2">Listen to the Story:</h3>
+                        <button onclick="speakText('${data.story.replace(/'/g, "\\'")}')" class="btn-secondary mb-2">Play Story Audio</button>
+                        <p class="text-gray-700 bg-gray-50 p-3 rounded-md">${data.story}</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-medium mb-2">Comprehension Questions:</h3>
+                        ${data.questions.map((q, index) => `
+                            <div class="mb-3 p-3 border border-gray-200 rounded-md">
+                                <p class="font-medium">${index + 1}. ${q.question}</p>
+                                <div class="space-y-1 mt-1">
+                                    ${q.options.map((opt, optIndex) => `
+                                        <label class="block">
+                                            <input type="radio" name="q${index}" value="${optIndex}" class="mr-2"> ${opt}
+                                        </label>
+                                    `).join('')}
+                                </div>
+                                <button onclick="checkAnswer(this, ${q.correctAnswerIndex}, 'q${index}')" class="mt-2 text-sm bg-blue-500 text-white py-1 px-2 rounded hover:bg-blue-600">Check Answer</button>
+                                <p class="text-sm mt-1 feedback hidden"></p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                listeningExerciseContainer.classList.remove('content-placeholder');
+            } else {
+                listeningExerciseContainer.innerHTML = '<p class="text-red-500">Could not load listening exercise. Please try again.</p>';
+                listeningExerciseContainer.classList.add('content-placeholder');
+            }
+        });
+
+        function checkAnswer(buttonEl, correctIndex, questionName) {
+            const selectedOption = document.querySelector(`input[name="${questionName}"]:checked`);
+            const feedbackEl = buttonEl.nextElementSibling;
+            feedbackEl.classList.remove('hidden', 'text-green-600', 'text-red-600');
+            if (selectedOption) {
+                if (parseInt(selectedOption.value) === correctIndex) {
+                    feedbackEl.textContent = "Correct!";
+                    feedbackEl.classList.add('text-green-600');
+                } else {
+                    feedbackEl.textContent = `Incorrect. The correct answer was option ${correctIndex + 1}.`;
+                    feedbackEl.classList.add('text-red-600');
+                }
+            } else {
+                feedbackEl.textContent = "Please select an answer.";
+                feedbackEl.classList.add('text-yellow-600');
+            }
+        }
+
+        // --- Reading Section ---
+        const loadReadingPassageBtn = document.getElementById('loadReadingPassage');
+        const readingPassageContainer = document.getElementById('readingPassageContainer');
+
+        loadReadingPassageBtn.addEventListener('click', async () => {
+            const prompt = `Generate an English reading passage (about 100-150 words) on a general interesting topic suitable for a B1 level English learner. Also, provide 3 comprehension questions (e.g., true/false, or short answer based on the text) and their answers.
+            Return the response as a JSON object with the following structure:
+            {
+              "passage": "The text of the passage...",
+              "questions": [
+                { "question": "Question 1 (e.g., True or False: ...)?", "answer": "Answer 1 (e.g., True/False. Explanation...)." },
+                { "question": "Question 2?", "answer": "Answer 2." }
+              ]
+            }`;
+            const data = await callGeminiAPI(prompt, true);
+            if (data && data.passage && data.questions) {
+                readingPassageContainer.innerHTML = `
+                    <div class="mb-4">
+                        <h3 class="text-xl font-medium mb-2">Reading Passage:</h3>
+                         <button onclick="speakText('${data.passage.replace(/'/g, "\\'")}')" class="btn-secondary mb-2 text-sm">Listen to Passage</button>
+                        <p class="text-gray-700 bg-gray-50 p-3 rounded-md leading-relaxed">${data.passage}</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-medium mb-2">Comprehension Questions:</h3>
+                        ${data.questions.map((q, index) => `
+                            <div class="mb-3 p-3 border border-gray-200 rounded-md">
+                                <p class="font-medium">${index + 1}. ${q.question}</p>
+                                <button onclick="toggleAnswer(this)" class="mt-2 text-sm bg-blue-500 text-white py-1 px-2 rounded hover:bg-blue-600">Show Answer</button>
+                                <p class="text-sm mt-1 answer hidden bg-green-50 p-2 rounded">${q.answer}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                readingPassageContainer.classList.remove('content-placeholder');
+            } else {
+                readingPassageContainer.innerHTML = '<p class="text-red-500">Could not load reading passage. Please try again.</p>';
+                readingPassageContainer.classList.add('content-placeholder');
+            }
+        });
+
+        function toggleAnswer(buttonEl) {
+            const answerEl = buttonEl.nextElementSibling;
+            answerEl.classList.toggle('hidden');
+            buttonEl.textContent = answerEl.classList.contains('hidden') ? "Show Answer" : "Hide Answer";
+        }
+
+
+        // --- Vocabulary Section ---
+        const loadVocabularySetBtn = document.getElementById('loadVocabularySet');
+        const vocabularyContainer = document.getElementById('vocabularyContainer');
+
+        loadVocabularySetBtn.addEventListener('click', async () => {
+            const prompt = `Generate a list of 5 English vocabulary words suitable for intermediate learners. For each word, provide its definition and an example sentence.
+            Return the response as a JSON object with the following structure:
+            {
+              "words": [
+                { "word": "Word1", "definition": "Definition1", "example": "Example sentence 1." },
+                { "word": "Word2", "definition": "Definition2", "example": "Example sentence 2." }
+              ]
+            }`;
+            const data = await callGeminiAPI(prompt, true);
+            if (data && data.words) {
+                vocabularyContainer.innerHTML = data.words.map(item => `
+                    <div class="p-4 bg-yellow-50 rounded-md shadow-sm">
+                        <h4 class="text-lg font-semibold text-yellow-800">${item.word} 
+                            <button onclick="speakText('${item.word.replace(/'/g, "\\'")}')" class="ml-1 p-1 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 focus:outline-none text-xs align-middle">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 inline">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                                </svg>
+                            </button>
+                        </h4>
+                        <p class="text-yellow-700"><strong class="font-medium">Definition:</strong> ${item.definition}</p>
+                        <p class="text-yellow-700 italic"><strong class="font-medium">Example:</strong> ${item.example}</p>
+                         <button onclick="speakText('${item.example.replace(/'/g, "\\'")}')" class="mt-1 text-xs bg-yellow-400 text-yellow-900 py-1 px-2 rounded hover:bg-yellow-500">Listen to Example</button>
+                    </div>
+                `).join('');
+                vocabularyContainer.classList.remove('content-placeholder');
+            } else {
+                vocabularyContainer.innerHTML = '<p class="text-red-500">Could not load vocabulary. Please try again.</p>';
+                vocabularyContainer.classList.add('content-placeholder');
+            }
+        });
+
+        // --- Grammar Section ---
+        const loadGrammarTopicBtn = document.getElementById('loadGrammarTopic');
+        const grammarContainer = document.getElementById('grammarContainer');
+
+        loadGrammarTopicBtn.addEventListener('click', async () => {
+            const prompt = `Explain a common English grammar rule (e.g., a tense like Present Perfect, use of prepositions like 'in/on/at', or articles 'a/an/the') in simple terms for an intermediate learner. Provide 2-3 clear examples. Then, create a short fill-in-the-blank exercise (3-5 sentences) to practice this rule, and provide the answers.
+            Return the response as a JSON object with the following structure:
+            {
+              "ruleName": "Name of the Grammar Rule",
+              "explanation": "Simple explanation...",
+              "examples": ["Example 1.", "Example 2.", "Example 3."],
+              "exerciseInstructions": "Fill in the blanks with the correct form based on the rule explained.",
+              "exercise": [
+                { "sentence": "Sentence with a __blank__.", "answer": "correct word" },
+                { "sentence": "Another sentence __blank__ here.", "answer": "word" }
+              ]
+            }`;
+            const data = await callGeminiAPI(prompt, true);
+            if (data && data.ruleName && data.explanation && data.examples && data.exercise) {
+                grammarContainer.innerHTML = `
+                    <div class="mb-4">
+                        <h3 class="text-xl font-semibold text-purple-700">${data.ruleName}</h3>
+                        <p class="text-gray-700 mt-1">${data.explanation}</p>
+                        <h4 class="font-medium mt-3 mb-1 text-purple-600">Examples:</h4>
+                        <ul class="list-disc list-inside space-y-1 text-gray-600">
+                            ${data.examples.map(ex => `<li>${ex}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-medium mb-2 text-purple-700">Practice Exercise:</h3>
+                        <p class="text-sm text-gray-600 mb-2">${data.exerciseInstructions || "Fill in the blanks:"}</p>
+                        ${data.exercise.map((item, index) => `
+                            <div class="mb-3 p-3 border border-gray-200 rounded-md bg-purple-50">
+                                <p class="font-medium">${index + 1}. ${item.sentence.replace('__blank__', '<input type="text" class="border border-purple-300 rounded px-2 py-1 mx-1 text-sm" data-answer="${item.answer.toLowerCase()}" placeholder="type here">')}</p>
+                                <button onclick="checkGrammarAnswer(this)" class="mt-2 text-sm bg-purple-500 text-white py-1 px-2 rounded hover:bg-purple-600">Check Answer</button>
+                                <p class="text-sm mt-1 feedback hidden"></p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                grammarContainer.classList.remove('content-placeholder');
+            } else {
+                grammarContainer.innerHTML = '<p class="text-red-500">Could not load grammar topic. Please try again.</p>';
+                grammarContainer.classList.add('content-placeholder');
+            }
+        });
+
+        function checkGrammarAnswer(buttonEl) {
+            const inputEl = buttonEl.parentElement.querySelector('input[type="text"]');
+            const feedbackEl = buttonEl.nextElementSibling;
+            const userAnswer = inputEl.value.trim().toLowerCase();
+            const correctAnswer = inputEl.getAttribute('data-answer').toLowerCase();
+            
+            feedbackEl.classList.remove('hidden', 'text-green-600', 'text-red-600');
+            if (userAnswer === correctAnswer) {
+                feedbackEl.textContent = "Correct!";
+                feedbackEl.classList.add('text-green-600');
+                inputEl.classList.remove('border-red-400');
+                inputEl.classList.add('border-green-400');
+            } else {
+                feedbackEl.textContent = `Not quite. The correct answer is: ${correctAnswer}`;
+                feedbackEl.classList.add('text-red-600');
+                inputEl.classList.remove('border-green-400');
+                inputEl.classList.add('border-red-400');
+            }
+        }
+
+    </script>
+</body>
+</html>
